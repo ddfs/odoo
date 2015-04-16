@@ -1,4 +1,3 @@
-# odoo
 Odoo / OpenERP customizations
 =============================
 
