@@ -7,7 +7,8 @@ Only files modifying the module is included. no __init__ or __openerp__ files he
 
 Scripts
 -------
-Remove module model data from database
+Remove module model data from database. 
+use this if you have problems removing database tables when uninstalling model regularly. 
 
 Website
 -------
