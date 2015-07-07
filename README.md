@@ -13,3 +13,7 @@ use this if you have problems removing database tables when uninstalling model r
 Website
 -------
 * Render 404 instead of system information
+
+Website Sale
+------------
+* Show available filters in selected category
