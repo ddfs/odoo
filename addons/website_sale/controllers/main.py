@@ -89,10 +89,15 @@ class HxnWebsiteSale(website_sale):
         compute_currency = lambda price: pool['res.currency']._compute(cr, uid, from_currency, to_currency, price, context=context)
 
         attributes_filtered = []
-        # filter available attributes in category
-        # any better way to do this???
+
+        # collect child category ids
+        active_categories = pool['product.public.category'].search(cr, uid, [('parent_id', '=', int(category.id))], context=context)
+
+        # append current category into list
+        active_categories.append(category.id)
+
         if category:
-            cr.execute("""
+            sql = """
                 SELECT
                     pavppr.att_id
                 FROM
@@ -107,12 +112,13 @@ class HxnWebsiteSale(website_sale):
                     pp.active = TRUE AND
                     pt.sale_ok = TRUE AND
                     pt.website_published = TRUE AND
-                    ppc.id = %s
+                    ppc.id IN  (%s)
                 GROUP BY
                     pavppr.att_id
                 ORDER BY
                     pavppr.att_id ASC
-            """, [str(category.id)])
+            """
+            cr.execute(sql % ','.join("%s" % ac for ac in active_categories))
 
             attribute_line_results = cr.fetchall()
 
@@ -123,9 +129,7 @@ class HxnWebsiteSale(website_sale):
             for a in attributes:
                 for b in a.value_ids:
                     attributes_filtered.append(b.id)
-                    
-        # attributes_filtered added
-        # modify your view to apply changes
+
         values = {
             'search': search,
             'category': category,
