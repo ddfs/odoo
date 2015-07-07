@@ -90,13 +90,13 @@ class HxnWebsiteSale(website_sale):
 
         attributes_filtered = []
 
-        # collect child category ids
-        active_categories = pool['product.public.category'].search(cr, uid, [('parent_id', '=', int(category.id))], context=context)
-
-        # append current category into list
-        active_categories.append(category.id)
-
         if category:
+            # collect child category ids
+            active_categories = pool['product.public.category'].search(cr, uid, [('parent_id', '=', int(category.id))], context=context)
+
+            # append current category into list
+            active_categories.append(category.id)
+
             sql = """
                 SELECT
                     pavppr.att_id
