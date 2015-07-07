@@ -16,4 +16,4 @@ Website
 
 Website Sale
 ------------
-* Show available filters in selected category
+* Show available attributes/filters in selected category
