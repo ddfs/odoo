@@ -9,16 +9,16 @@ from openerp.tools.translate import _
 from openerp.addons.website.models.website import slug
 from openerp.addons.web.controllers.main import login_redirect
 
-PPG = 20 # Products Per Page
+PPG = 20  # Products Per Page
 PPR = 4  # Products Per Row
 
-class HxnWebsiteSale(website_sale):
 
+class HxnWebsiteSale(website_sale):
     @http.route(['/shop',
-        '/shop/page/<int:page>',
-        '/shop/category/<model("product.public.category"):category>',
-        '/shop/category/<model("product.public.category"):category>/page/<int:page>'
-    ], type='http', auth="public", website=True)
+                 '/shop/page/<int:page>',
+                 '/shop/category/<model("product.public.category"):category>',
+                 '/shop/category/<model("product.public.category"):category>/page/<int:page>'
+                 ], type='http', auth="public", website=True)
     def shop(self, page=0, category=None, search='', **post):
         cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
 
@@ -26,11 +26,11 @@ class HxnWebsiteSale(website_sale):
         if search:
             for srch in search.split(" "):
                 domain += ['|', '|', '|', ('name', 'ilike', srch), ('description', 'ilike', srch),
-                    ('description_sale', 'ilike', srch), ('product_variant_ids.default_code', 'ilike', srch)]
+                           ('description_sale', 'ilike', srch), ('product_variant_ids.default_code', 'ilike', srch)]
         if category:
             domain += [('public_categ_ids', 'child_of', int(category))]
         attrib_list = request.httprequest.args.getlist('attrib')
-        attrib_values = [map(int,v.split("-")) for v in attrib_list if v]
+        attrib_values = [map(int, v.split("-")) for v in attrib_list if v]
         attrib_set = set([v[1] for v in attrib_values])
 
         if attrib_values:
@@ -69,7 +69,8 @@ class HxnWebsiteSale(website_sale):
         if attrib_list:
             post['attrib'] = attrib_list
         pager = request.website.pager(url=url, total=product_count, page=page, step=PPG, scope=7, url_args=post)
-        product_ids = product_obj.search(cr, uid, domain, limit=PPG, offset=pager['offset'], order='website_published desc, website_sequence desc', context=context)
+        product_ids = product_obj.search(cr, uid, domain, limit=PPG, offset=pager['offset'],
+                                         order='website_published desc, website_sequence desc', context=context)
         products = product_obj.browse(cr, uid, product_ids, context=context)
 
         style_obj = pool['product.style']
@@ -86,13 +87,15 @@ class HxnWebsiteSale(website_sale):
 
         from_currency = pool.get('product.price.type')._get_field_currency(cr, uid, 'list_price', context)
         to_currency = pricelist.currency_id
-        compute_currency = lambda price: pool['res.currency']._compute(cr, uid, from_currency, to_currency, price, context=context)
+        compute_currency = lambda price: pool['res.currency']._compute(cr, uid, from_currency, to_currency, price,
+                                                                       context=context)
 
         attributes_filtered = []
 
         if category:
             # collect child category ids
-            active_categories = pool['product.public.category'].search(cr, uid, [('parent_id', '=', int(category.id))], context=context)
+            active_categories = pool['product.public.category'].search(cr, uid, [('parent_id', '=', int(category.id))],
+                                                                       context=context)
 
             # append current category into list
             active_categories.append(category.id)
@@ -125,10 +128,11 @@ class HxnWebsiteSale(website_sale):
             for alr in attribute_line_results:
                 attributes_filtered.append(alr[0])
 
-        if not category:
-            for a in attributes:
-                for b in a.value_ids:
-                    attributes_filtered.append(b.id)
+        # hide/view on homepage
+        # if not category:
+        #    for a in attributes:
+        #       for b in a.value_ids:
+        #           attributes_filtered.append(b.id)
 
         values = {
             'search': search,
@@ -147,6 +151,6 @@ class HxnWebsiteSale(website_sale):
             'compute_currency': compute_currency,
             'keep': keep,
             'style_in_product': lambda style, product: style.id in [s.id for s in product.website_style_ids],
-            'attrib_encode': lambda attribs: werkzeug.url_encode([('attrib',i) for i in attribs]),
+            'attrib_encode': lambda attribs: werkzeug.url_encode([('attrib', i) for i in attribs]),
         }
         return request.website.render("website_sale.products", values)
