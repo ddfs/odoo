@@ -16,8 +16,12 @@ Exclude unwanted urls from sitemap. (might requires deleting old sitemap files d
 
 Website
 -------
-* Render 404 instead of system information
+Render 404 instead of system information
+
+Website-SEO
+-----------
+tell search engines (google, yahoo, yandex etc) that english is not the main language on your website.
 
 Website Sale
 ------------
-* Show available attributes/filters in selected category
+Show available attributes/filters in selected category
