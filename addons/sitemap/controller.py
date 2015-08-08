@@ -48,20 +48,22 @@ class website(Website):
 
             pages = 0
             first_page = None
-            exclude_from_sitemap = []
-            raw_locs = request.website.enumerate_pages()
-            locs = []
+
+            locs = request.website.enumerate_pages()
 
             if request.website.exclude_from_sitemap:
                 exclude_from_sitemap = request.website.exclude_from_sitemap.splitlines()
 
-            for loc in raw_locs:
-                lloc = loc.values()
+                raw_locs = locs;
+                locs = []
 
-                if lloc[0] in exclude_from_sitemap:
-                    _logger.info("Excluding: %s" % lloc[0])
-                else:
-                    locs.append(loc)
+                for loc in raw_locs:
+                    lloc = loc.values()
+
+                    if lloc[0] in exclude_from_sitemap:
+                        _logger.info("Excluding: %s" % lloc[0])
+                    else:
+                        locs.append(loc)
 
             while True:
                 start = pages * LOC_PER_SITEMAP
