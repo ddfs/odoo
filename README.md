@@ -17,6 +17,7 @@ Exclude unwanted urls from sitemap. (might requires deleting old sitemap files d
 Website
 -------
 Render 404 instead of system information
+Nginx+SSL+Proxy: sitemap generation using proper url scheme
 
 Website-SEO
 -----------
