@@ -1,0 +1,39 @@
+#!/bin/bash
+
+#
+# npm, lessc
+#
+# npm install -g less
+# npm install -g less-plugin-clean-css
+# ln -s /path/to/node/bin/lessc /usr/local/bin/lessc
+
+#
+# clean .pyc files
+#
+find . -name "*.pyc" -delete
+
+#
+# Full upgrade
+#
+# ./openerp-server --config=./etc/openerp-server.conf --xmlrpc-port=8090 --log-level=info --stop-after-init -u base -i my_custom
+
+#
+# Local run
+#
+# --email-from=portal@myportal.fi
+# --load-language=fi_FI
+# --auto-reload
+# --debug
+./openerp-server --config=./etc/openerp-server.conf --xmlrpc-port=8090 --log-level=info --without-demo=all \
+-u my_base \
+-u my_account \
+-u my_mail \
+-u my_product \
+-u my_report \
+-u my_sale \
+-u my_sale_order \
+-u my_web \
+-u my_website \
+-u my_website_crm \
+-u my_website_sale \
+-u my_website_sale_delivery
