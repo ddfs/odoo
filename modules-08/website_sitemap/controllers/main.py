@@ -10,7 +10,7 @@ from openerp.addons.website.controllers.main import Website, SITEMAP_CACHE_TIME,
 _logger = logging.getLogger(__name__)
 
 
-class website(Website):
+class Website(Website):
     @http.route('/sitemap.xml', type='http', auth="public", website=True)
     def sitemap_xml_index(self):
         cr, uid, context = request.cr, openerp.SUPERUSER_ID, request.context
