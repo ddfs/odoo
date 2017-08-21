@@ -51,6 +51,7 @@ class website(Website):
 
             locs = request.website.enumerate_pages()
 
+            # if handled in model, it won't show urls when searched for linking.
             if request.website.exclude_from_sitemap:
                 exclude_from_sitemap = request.website.exclude_from_sitemap.splitlines()
 
