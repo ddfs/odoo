@@ -4,6 +4,7 @@ All changes made in modules included in their folders.
 
 Only files modifying the module is included. no __init__ or __openerp__ files here.
 
+each version has own folder, no seperate tags or branches
 
 Scripts
 -------
