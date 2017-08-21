@@ -13,17 +13,14 @@
 # init functions
 . /lib/lsb/init-functions
 
-# root configuration
-. twsconf
-
 # title
 title="myportal.fi"
 
 # workspace directory
-workspace="$dir/website/myportal.fi/live"
+workspace="/path/to/website/myportal.fi/live"
 
-# daemon
-daemon="python"
+# daemon [ python or virtualenv ] ?
+daemon="python" 
 
 # PID
 daemon_pid="$workspace/var/run/${title}.pid"
