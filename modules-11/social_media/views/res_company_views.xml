@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_company_social_media_links" model="ir.ui.view">
+        <field name="name">Social Media Links</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='social_media']/field[@name='social_twitter']" position="before">
+                <field name="social_new_window"/>
+            </xpath>
+
+            <xpath expr="//group[@name='social_media']/field[@name='social_facebook']" position="after">
+                <field name="social_instagram"/>
+                <field name="social_pinterest"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
