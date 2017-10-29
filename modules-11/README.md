@@ -1,1 +1,2 @@
-Odoo V11 modules
+Odoo v11 modules
+---------------
