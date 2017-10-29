@@ -3,6 +3,7 @@
 #
 # clean .pyc files
 #
+find . -name "__pycache__" -delete
 find . -name "*.pyc" -delete
 
 #
