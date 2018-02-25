@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="website_social_media" name="Social Media Links" inherit_id="website.footer_default">
+
+<xpath expr="//div[@id='footer']/div[@class='row']/div[@id='info']/h2" position="attributes">
+    <attribute name="class">h3 mt0</attribute>
+</xpath>
+
+<xpath expr="//div[@id='footer']/div[@class='row']/div[@id='info']/h2" position="inside">
+    <t t-if="website.social_new_window">
+        <a t-att-href="website.social_instagram" t-if="website.social_instagram" target="_blank"><i class="fa fa-instagram"/></a>
+        <a t-att-href="website.social_pinterest" t-if="website.social_pinterest" target="_blank"><i class="fa fa-pinterest"/></a>
+    </t>
+    <t t-if="not website.social_new_window">
+        <a t-att-href="website.social_instagram" t-if="website.social_instagram"><i class="fa fa-instagram"/></a>
+        <a t-att-href="website.social_pinterest" t-if="website.social_pinterest"><i class="fa fa-pinterest"/></a>
+    </t>
+</xpath>
+
+<xpath expr="//div[@id='footer']/div[@class='row']/div[@id='info']/h2/a" position="attributes">
+    <t t-if="website.social_new_window">
+        <attribute name="target">_blank</attribute>
+    </t>
+</xpath>
+
+    </template>
+</odoo>
