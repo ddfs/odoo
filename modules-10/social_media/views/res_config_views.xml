@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_website_config_settings" model="ir.ui.view">
+        <field name="name">Social Media Links</field>
+        <field name="model">website.config.settings</field>
+        <field name="inherit_id" ref="website.view_website_config_settings"/>
+        <field name="arch" type="xml">
+            <label for="social_twitter" position="before">
+                <label for="social_new_window"/>
+                <div name="social_new_window">
+                    <field name="social_new_window"/>
+                </div>
+            </label>
+            <xpath expr="//div[@name='social_facebook']" position="after">
+                <label for="social_instagram"/>
+                <div name="social_instagram">
+                    <div class="oe_inline">
+                        <field name="social_instagram" placeholder="https://www.instagram.com/youraccount"/>
+                    </div>
+                </div>
+                <label for="social_pinterest"/>
+                <div name="social_pinterest">
+                    <div class="oe_inline">
+                        <field name="social_pinterest" placeholder="https://www.pinterest.com/youraccount"/>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>
