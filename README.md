@@ -8,9 +8,9 @@ Each version has own folder, no seperate tags or branches
 
 editing files from browser, not keeping a local branch.
 
-openerp
--------
-core modifications
+odoo/openerp
+------------
+core modifications. odoo/openerp folders; almost identical stuff just adapted for new versions
 
 scripts
 -------
