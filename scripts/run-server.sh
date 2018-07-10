@@ -1,6 +1,6 @@
 #!/bin/bash
 ### BEGIN INIT INFO
-# Provides:          hexon.fi
+# Provides:          myportal.fi
 # Required-Start:    $remote_fs $syslog
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
@@ -14,7 +14,7 @@
 . /lib/lsb/init-functions
 
 # title
-title="hexon.fi"
+title="myportal.fi"
 
 # workspace directory
 workspace="/srv/$title/live"
