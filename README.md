@@ -11,6 +11,3 @@ editing files from browser, not keeping a local branch.
 scripts
 -------
 bash and sql scripts, handy when needed.
-
-- run-local.sh for development
-- run-server.sh provives odoo instance as daemon for debian servers.
