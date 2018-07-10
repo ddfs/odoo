@@ -5,7 +5,7 @@
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Start openerp daemon at boot time
+# Short-Description: Start odoo daemon at boot time
 # Description:       Enable service provided by daemon.
 # X-Interactive:     true
 ### END INIT INFO
@@ -14,28 +14,33 @@
 . /lib/lsb/init-functions
 
 # title
-title="myportal.fi"
+title="hexon.fi"
 
 # workspace directory
-workspace="/path/to/website/myportal.fi/live"
+workspace="/srv/$title/live"
 
-# daemon [ python or virtualenv ] ?
-daemon="python" 
+# daemon env
+daemon_env_dir="/srv/$title/venv"
+daemon_env_run="$daemon_env_dir/bin/activate"
+
+# daemon
+daemon_bin="python3"
+daemon="$daemon_env_dir/bin/$daemon_bin"
 
 # PID
 daemon_pid="$workspace/var/run/${title}.pid"
 
 # executable script
-daemon_exec="$workspace/openerp-server"
+daemon_exec="$workspace/odoo-server"
 
 # args
 daemon_args=""
 
 # configuration file
-daemon_conf="$workspace/etc/openerp-server.conf"
+daemon_conf="$workspace/etc/odoo-server.conf"
 
 # data directory.
-daemon_data_dir="$workspace/myportal/data"
+daemon_data_dir="$workspace/data"
 
 # log level
 daemon_log_level="warn"
@@ -44,22 +49,51 @@ daemon_log_level="warn"
 daemon_log_dir="$workspace/var/log"
 
 # log file
-daemon_logs="$daemon_log_dir/openerp-server.log"
+daemon_logs="$daemon_log_dir/odoo-server.log"
 
 # parse daemon into executable form
-daemon_run="$(which $daemon) $daemon_exec $daemon_args"
+daemon_run="$daemon $daemon_exec $daemon_args"
 
 # user
-daemon_user=myportal
+daemon_user=www-data
 
 # group
 daemon_group="$daemon_user"
 
 # port
-daemon_port=34601
+daemon_port=34600
 
-# openerp-server configuration
+# odoo-server configuration
 export LOGNAME=$daemon_user
+
+fnc_daemon_env() {
+    log_action_msg "$title" "preparing environment"
+
+    # create environment if missing
+    if [ -z $daemon_env ]; then
+        eval "virtualenv -p /usr/bin/$daemon_bin $daemon_env_dir"
+    fi
+
+    # activate environment
+    eval "source $daemon_env_run"
+
+    # ensure requirements
+    eval "pip install --no-cache-dir -r $workspace/etc/requirements.txt"
+
+    log_action_msg "$title" "environment ready."
+}
+
+fnc_daemon_env_reset() {
+    log_action_msg "$title" "resetting environment"
+
+    # check it exists
+    if [ -d $daemon_env ]; then
+        eval "rm -rf $daemon_env_dir"
+    fi
+
+    # re-load
+    fnc_daemon_env
+}
 
 fnc_pid() {
     pid=
@@ -97,10 +131,12 @@ fnc_start() {
     if [ "$pid" ]; then
         log_action_msg "$title" "is already running [PID: $pid]"
     else
+        fnc_daemon_env
+
         log_progress_msg "$title" "is starting"
 
         # start daemon
-        start-stop-daemon --start --quiet --pidfile $daemon_pid --chuid $daemon_user:$daemon_group --background --make-pidfile --exec $daemon_run -- --config $daemon_conf --log-level=$daemon_log_level --logfile $daemon_logs --xmlrpc-port=$daemon_port --proxy-mode
+        start-stop-daemon --start --quiet --pidfile $daemon_pid --chuid $daemon_user:$daemon_group --background --make-pidfile --exec $daemon_run -- --config $daemon_conf --log-level=$daemon_log_level --logfile $daemon_logs --xmlrpc-port=$daemon_port --proxy-mode --no-database-list --without-demo=all
 
         i=0
 
@@ -230,48 +266,16 @@ case "$1" in
     # -------------------------------------------------------------------------
     # hidden functions
     # -------------------------------------------------------------------------
+    env)
+        fnc_daemon_env
+    ;;
+
+    env_reset)
+        fnc_daemon_env_reset
+    ;;
+
     kill)
         fnc_kill
-    ;;
-
-    install)
-        fnc_is_root $title
-
-        if ! getent passwd | grep -q "^$daemon_user:"; then
-            adduser --system --no-create-home --quiet --group $daemon_user
-        fi
-
-        # Register "$daemon_user" as a postgres superuser
-        su - postgres -c "createuser -s $daemon_user" 2> /dev/null || true
-
-        # Configuration file
-        chown $daemon_user:$daemon_group $daemon_conf
-        chmod 0640 $daemon_conf
-
-        # Log
-        mkdir -p $daemon_log_dir
-        chown $daemon_user:daemon_group $daemon_log_dir
-        chmod 0750 $daemon_log_dir
-
-        # Data dir
-        mkdir -p $daemon_data_dir
-        chown $daemon_user:$daemon_group $daemon_data_dir
-
-        # update-python-modules
-        update-python-modules
-    ;;
-
-    uninstall)
-        fnc_is_root $title
-
-        deluser --quiet --system $daemon_user || true
-        delgroup --quiet --system --only-if-empty $daemon_group || true
-
-        if [ -d "$workspace" ]; then
-            # don't do this :)
-            echo "to delete all files: rm -rf $workspace"
-        fi
-
     ;;
 
     *)
@@ -281,3 +285,4 @@ case "$1" in
 esac
 
 exit 0
+
