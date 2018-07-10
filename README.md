@@ -7,3 +7,10 @@ Only modified files are included. no __init__ or __openerp__ or __manifest__ fil
 Each version has own folder, no seperate tags or branches
 
 editing files from browser, not keeping a local branch.
+
+scripts
+-------
+bash and sql scripts, handy when needed.
+
+- run-local.sh for development
+- run-server.sh provives odoo instance as daemon for debian servers.
