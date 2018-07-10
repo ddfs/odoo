@@ -1,3 +1,8 @@
+scripts
+-------
+
+- run-local.sh for development
+- run-server.sh provives odoo instance as daemon for debian servers.
 
 run-local.sh
 ------------
