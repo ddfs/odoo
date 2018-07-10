@@ -8,6 +8,10 @@ Each version has own folder, no seperate tags or branches
 
 editing files from browser, not keeping a local branch.
 
+openerp
+-------
+core modifications
+
 scripts
 -------
 bash and sql scripts, handy when needed.
