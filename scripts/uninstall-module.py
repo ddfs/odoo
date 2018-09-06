@@ -5,12 +5,11 @@
 """ 
 original gist code at: https://gist.github.com/repodevs/9fd47c5314a5074af9aafa2fddf4cb7b
 
-this has minor updates to connect and handle 
+this has minor updates to connect and handle multiple uninstallations
 """
 
 import xmlrpclib
 import argparse
-import getpass
 
 parser = argparse.ArgumentParser()
 # Connection args
@@ -22,11 +21,11 @@ parser.add_argument('-s', '--url', help="URL to connect", action='store', metava
 # Feature args
 parser.add_argument('module', help="MODULE to uninstall", action='store', metavar='MODULE')
 
-args = vars(parser.parse_args())
+args = parser.parse_args()
 
 # Log in
-common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(args['url']))
-uid = common.authenticate(args['database'], args['user'], args['password'], {})
+common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(args.url))
+uid = common.authenticate(args.database, args.user, args.password, {})
 
 if not uid:
     print "Invalid credentials"
@@ -35,12 +34,12 @@ if not uid:
 print "OK. UID: %s" % uid
 
 # Get the object proxy
-models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(args['url']))
+models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(args.url))
 print "OK."
 
 # Search module
-module_ids = models.execute_kw(args['database'], uid, args['password'],
-                               'ir.module.module', 'search', [[['name', 'like', args['module']]]])
+module_ids = models.execute_kw(args.database, uid, args.password,
+                               'ir.module.module', 'search', [[['name', 'in', args.module.split(',')]]])
 
 if not module_ids:
     print "Module not found."
@@ -49,11 +48,13 @@ if not module_ids:
 # Uninstall the module
 print "OK. Uninstalling ID: %s" % module_ids
 
-result = models.execute_kw(args['database'], uid, args['password'],
-                        'ir.module.module', "button_immediate_uninstall", [module_ids])
+result = models.execute_kw(args.database, uid, args.password,
+                           'ir.module.module', "button_immediate_uninstall", [module_ids])
 
 if result and 'tag' in result and result['tag'] == 'reload':
     print "Done."
     exit(0)
 
-## used ./odoo_uninstall_module.py -s http://0.0.0.0:7769 -d odoo_database -u admin -w admin pos_notes
+# ./odoo_uninstall_module.py -s http://0.0.0.0:7769 -d odoo_database -u admin -w admin pos_notes
+# or
+# ./odoo_uninstall_module.py -s http://0.0.0.0:7769 -d odoo_database -u admin -w admin "pos_notes, website"
