@@ -5,7 +5,7 @@
 """ 
 original gist code at: https://gist.github.com/repodevs/9fd47c5314a5074af9aafa2fddf4cb7b
 
-this has minor updates to connect and handle multiple uninstallations
+this has minor updates to connect and handle multiple uninstalls
 """
 
 import xmlrpclib
@@ -37,24 +37,29 @@ print "OK. UID: %s" % uid
 models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(args.url))
 print "OK."
 
+modules = args.module.split(',')
+
 # Search module
-module_ids = models.execute_kw(args.database, uid, args.password,
-                               'ir.module.module', 'search', [[['name', 'in', args.module.split(',')]]])
+for module in modules:
+    # trim space if there
+    module = module.strip()
 
-if not module_ids:
-    print "Module not found."
-    exit(1)
+    module_id = models.execute_kw(args.database, uid, args.password,
+                               'ir.module.module', 'search', [[['name', '=', module]]])
 
-# Uninstall the module
-print "OK. Uninstalling ID: %s" % module_ids
+    if not module_id:
+        print "Skipping '%s'. not found." % module
+    else:
+        print "Uninstalling '%s'" % module
 
-result = models.execute_kw(args.database, uid, args.password,
-                           'ir.module.module', "button_immediate_uninstall", [module_ids])
+        result = models.execute_kw(args.database, uid, args.password,
+                                   'ir.module.module', "button_immediate_uninstall", [module_id])
 
-if result and 'tag' in result and result['tag'] == 'reload':
-    print "Done."
-    exit(0)
+        if result and 'tag' in result and result['tag'] == 'reload':
+            print "Done."
+
+exit(0)
 
 # ./odoo_uninstall_module.py -s http://0.0.0.0:7769 -d odoo_database -u admin -w admin pos_notes
 # or
-# ./odoo_uninstall_module.py -s http://0.0.0.0:7769 -d odoo_database -u admin -w admin "pos_notes, website"
+# ./odoo_uninstall_module.py -s http://0.0.0.0:7769 -d odoo_database -u admin -w admin "pos_notes,website"
