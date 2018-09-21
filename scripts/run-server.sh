@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ### BEGIN INIT INFO
-# Provides:          myportal.fi
+# Provides:          %daemon.name%
 # Required-Start:    $remote_fs $syslog
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
@@ -13,82 +13,86 @@
 # init functions
 . /lib/lsb/init-functions
 
-# title
-title="myportal.fi"
+# daemon name
+daemon_name="%daemon.name%"
 
-# workspace directory
-workspace="/srv/$title/live"
+# daemon working directory
+daemon_workspace="%daemon.workspace%"
 
-# daemon env
-daemon_env_dir="/srv/$title/venv"
-daemon_env_run="$daemon_env_dir/bin/activate"
+# daemon PID file
+daemon_pid="/var/run/${daemon_name}.pid"
 
-# daemon
-daemon_bin="python3"
-daemon="$daemon_env_dir/bin/$daemon_bin"
+# daemon user
+daemon_user="%daemon.user%"
 
-# PID
-daemon_pid="$workspace/var/run/${title}.pid"
+# daemon group
+daemon_group="%daemon.group%"
 
-# executable script
-daemon_exec="$workspace/odoo-server"
+# daemon python env directory
+daemon_python_env_dir="${daemon_workspace}/venv"
 
-# args
-daemon_args=""
+# python env activator
+daemon_python_env_activate="${daemon_python_env_dir}/bin/activate"
 
-# configuration file
-daemon_conf="$workspace/etc/odoo-server.conf"
+# python executable
+daemon_python_bin="%daemon.python.bin%"
 
-# data directory.
-daemon_data_dir="$workspace/data"
+# python pip executable
+daemon_python_pip="%daemon.python.pip%"
 
-# log level
-daemon_log_level="warn"
+# python requirements
+daemon_python_quirements="%daemon.python.requirements%"
 
-# log directory
-daemon_log_dir="$workspace/var/log"
+# odoo executable script
+daemon_odoo_exec="%daemon.odoo.exec%"
 
-# log file
-daemon_logs="$daemon_log_dir/odoo-server.log"
+# odoo configuration file
+daemon_odoo_conf="%daemon.odoo.conf%"
 
-# parse daemon into executable form
-daemon_run="$daemon $daemon_exec $daemon_args"
+# additional args to odoo
+daemon_odoo_args="%daemon.odoo.args%"
 
-# user
-daemon_user=www-data
+# daemon exec path
+daemon_exec="${daemon_python_env_dir}/bin/${daemon_python_bin}"
 
-# group
-daemon_group="$daemon_user"
+# daemon run command
+daemon_run="$daemon_exec $daemon_odoo_exec"
 
-# port
-daemon_port=34600
-
-# odoo-server configuration
-export LOGNAME=$daemon_user
+# server configuration
+export LOGNAME="$daemon_user"
 
 fnc_daemon_env() {
-    log_action_msg "$title" "preparing environment"
+    log_action_msg "${daemon_name} preparing environment"
+
+    # test virtualenv installed correctly
+    virtualenv_bin=$(which virtualenv)
+
+    if [[ -z ${virtualenv_bin} ]] || [[ ! -x ${virtualenv_bin} ]]; then
+        log_failure_msg "virtualenv is not available. exiting"
+        exit -1
+    fi
 
     # create environment if missing
-    if [ -z $daemon_env ]; then
-        eval "virtualenv -p /usr/bin/$daemon_bin $daemon_env_dir"
+    if [[ ! -d ${daemon_python_env_dir} ]]; then
+        eval "${virtualenv_bin} -p /usr/bin/${daemon_python_bin} ${daemon_python_env_dir}"
     fi
 
     # activate environment
-    eval "source $daemon_env_run"
+    eval "source ${daemon_python_env_activate}"
 
     # ensure requirements
-    eval "pip install --no-cache-dir -r $workspace/etc/requirements.txt"
+    eval "${daemon_python_pip} install --no-cache-dir -r ${daemon_python_quirements}"
 
-    log_action_msg "$title" "environment ready."
+    log_action_msg "${daemon_name} environment ready."
 }
 
+
 fnc_daemon_env_reset() {
-    log_action_msg "$title" "resetting environment"
+    log_action_msg "${daemon_name} resetting environment"
 
     # check it exists
-    if [ -d $daemon_env ]; then
-        eval "rm -rf $daemon_env_dir"
+    if [[ -d ${daemon_python_env_dir} ]]; then
+        eval "rm -rf ${daemon_python_env_dir}"
     fi
 
     # re-load
@@ -98,45 +102,51 @@ fnc_daemon_env_reset() {
 fnc_pid() {
     pid=
 
-    if [ -f $daemon_pid ]; then
-        pid=$(cat $daemon_pid)
+    if [[ -f ${daemon_pid} ]]; then
+        pid=$(cat ${daemon_pid})
     fi
 
-    if [ -z "$pid" ]; then
-        pid=$(ps auxwww | grep "$daemon" | grep "$daemon_exec" | grep -v grep | awk '{print $2}')
+    if [[ -z ${pid}  ]]; then
+        pid=$(ps auxwww | grep "${daemon_exec}" | grep "${daemon_odoo_exec}" | grep -v grep | awk '{print $2}')
 
         # update pid file
-        echo "$pid" > $daemon_pid
+        echo "${pid}" > ${daemon_pid}
     fi
 
     # check if really running
-    if [ ! -z "$pid" ]; then
-        if ! ps -p $pid > /dev/null; then
+    if [ ! -z "${pid}" ]; then
+        if ! ps -p ${pid} > /dev/null; then
             # remove the pid file
-            rm -rf $daemon_pid
+            rm -rf ${daemon_pid}
 
             # null pid value
             pid=
         fi
     fi
 
-    echo $pid
+    echo ${pid}
 }
 
 fnc_start() {
-    fnc_is_root $title
+    pid=$(fnc_pid)
 
-    pid=`fnc_pid`
-
-    if [ "$pid" ]; then
-        log_action_msg "$title" "is already running [PID: $pid]"
+    if [[ ${pid} ]]; then
+        log_action_msg "${daemon_name} is already running [PID: ${pid}]"
     else
         fnc_daemon_env
 
-        log_progress_msg "$title" "is starting"
+        log_progress_msg "${daemon_name} is starting"
 
         # start daemon
-        start-stop-daemon --start --quiet --pidfile $daemon_pid --chuid $daemon_user:$daemon_group --background --make-pidfile --exec $daemon_run -- --config $daemon_conf --log-level=$daemon_log_level --logfile $daemon_logs --xmlrpc-port=$daemon_port --proxy-mode --no-database-list --without-demo=all
+        start-stop-daemon --start --quiet --background --make-pidfile --remove-pidfile --oknodo \
+                --pidfile ${daemon_pid} \
+                --chdir ${daemon_workspace} \
+                --chuid ${daemon_user}:${daemon_group} \
+                --startas ${daemon_run} \
+                -- \
+                    --config ${daemon_odoo_conf} \
+                    --no-database-list \
+                    --without-demo=all ${daemon_odoo_args}
 
         i=0
 
@@ -157,18 +167,16 @@ fnc_start() {
 }
 
 fnc_stop() {
-    fnc_is_root $title
+    pid=$(fnc_pid)
 
-    pid=`fnc_pid`
-
-    if [ -z "$pid" ]; then
-        log_warning_msg "$title" "is not running"
+    if [[ -z ${pid} ]]; then
+        log_warning_msg "${daemon_name} is not running"
     else
-        log_progress_msg "$title" "is stopping"
+        log_progress_msg "${daemon_name} is stopping"
 
-        start-stop-daemon --stop --quiet --pidfile $daemon_pid --oknodo --retry 3
+        start-stop-daemon --stop --quiet --pidfile ${daemon_pid} --oknodo --retry 3
 
-	    i=0
+        i=0
 
         # give a little time to stop
         while [ $i -lt 3 ]; do
@@ -182,33 +190,31 @@ fnc_stop() {
         echo
 
         # stopped nicely?
-        pid=`fnc_pid`
+        pid=$(fnc_pid)
 
-        if [ -z "$pid" ]; then
-            log_action_msg "$title" "is stopped"
+        if [[ -z ${pid} ]]; then
+            log_action_msg "${daemon_name} is stopped"
 
             # remove pid
-            rm -f $daemon_pid
+            rm -f ${daemon_pid}
         else
             # not stopping
-            log_failure_msg "$title" "is still running"
+            log_failure_msg "${daemon_name} is still running"
         fi
     fi
 }
 
 fnc_kill() {
-    fnc_is_root $title
+    pid=$(fnc_pid)
 
-    pid=`fnc_pid`
-
-    if [ -z "$pid" ]; then
-        log_warning_msg "$title" "is not running"
+    if [[ -z ${pid} ]]; then
+        log_warning_msg "${daemon_name} is not running"
     else
-        log_progress_msg "$title" "is stopping"
+        log_progress_msg "${daemon_name} is stopping"
 
-        eval "kill -9 $pid"
+        eval "kill -9 ${pid}"
 
-	    i=0
+        i=0
 
         while [ $i -lt 3 ]; do
             echo -n "."
@@ -221,27 +227,27 @@ fnc_kill() {
         echo
 
         # kill works?
-        pid=`fnc_pid`
+        pid=$(fnc_pid)
 
-        if [ -z "$pid" ]; then
-            log_action_msg "$title" "is killed"
+        if [[ -z ${pid} ]]; then
+            log_action_msg "${daemon_name} is killed"
 
             # remove pid
-            rm -f $daemon_pid
+            rm -f ${daemon_pid}
         else
             # not able to kill
-            log_failure_msg "$title" "is still running"
+            log_failure_msg "${daemon_name} is still running"
         fi
     fi
 }
 
 fnc_status() {
-    pid=`fnc_pid`
+    pid=$(fnc_pid)
 
-    if [ -z "$pid" ]; then
-        log_warning_msg "$title" "not running"
+    if [[ -z ${pid} ]]; then
+        log_warning_msg "${daemon_name} not running"
     else
-        log_action_msg "$title" "running [PID: $pid]"
+        log_action_msg "${daemon_name} running [PID: ${pid}]"
     fi
 }
 
@@ -279,7 +285,7 @@ case "$1" in
     ;;
 
     *)
-        echo "Usage: $title {start|stop|restart|force-reload|status}" >&2
+        echo "Usage: ${daemon_name} {start|stop|restart|force-reload|status}" >&2
         exit 1
     ;;
 esac
