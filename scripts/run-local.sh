@@ -1,39 +1,56 @@
-#!/bin/bash
-
-fnc_local_args="" # -u module1,module2
+#!/usr/bin/env bash
+#  -----------------------------------------------------------------------------
+#  (c)
+#  -----------------------------------------------------------------------------
+fnc_local_args="-u my_module"
 
 workspace=`pwd`
-py_exec="/usr/bin/python3" # "/usr/bin/python2"
-py_venv="$workspace/venv"
+
+python_exec="/usr/bin/python3" # python2|python3
+python_pip="pip" # pip|pip2|pip3
+python_venv="${workspace}/venv"
+
+odoo_exec="${workspace}/odoo-bin"
+odoo_conf="${workspace}/local.conf"
+odoo_requirements="${workspace}/requirements.txt"
 
 fnc_clean() {
-    eval "find $workspace -name ""*.pyc"" -delete"
-    eval "find $workspace -name ""__pycache__"" -delete"
+    eval "find ${workspace} -name ""*.pyc"" -delete"
+    eval "find ${workspace} -name ""__pycache__"" -delete"
+}
+
+fnc_env_activate() {
+    # activate environment
+    if [[ -f "${python_venv}/bin/activate" ]]; then
+        eval "source ${python_venv}/bin/activate"
+    else
+        echo "Create virtual environment first!"
+        exit 1
+    fi
 }
 
 fnc_env() {
     # create environment if missing
-    if [ -z $pyvenv ]; then
-        eval "virtualenv -p $py_exec $py_venv"
+    if [[ ! -d ${python_venv} ]]; then
+        eval "virtualenv -p ${python_exec} ${python_venv}"
     fi
 
-    # activate environment
-    eval "source $py_venv/bin/activate"
+    fnc_env_activate
 
     # ensure requirements
-    eval "pip install --no-cache-dir -r $workspace/etc/requirements.txt"
+    eval "${python_pip} install --no-cache-dir -r ${odoo_requirements}"
 }
 
 fnc_install() {
-    eval "$workspace/odoo-server --config=$workspace/etc/odoo-server.conf --xmlrpc-port=8090 --log-level=info --stop-after-init --without-demo=all -i base -i web"
+    eval "${odoo_exec} --config=${odoo_conf} --no-xmlrpc --stop-after-init --without-demo=all -i base -i web"
 }
 
 fnc_local() {
-    eval "$workspace/odoo-server --config=$workspace/etc/odoo-server.conf --xmlrpc-port=8090 --log-level=info --without-demo=all $fnc_local_args"
+    eval "${odoo_exec} --config=${odoo_conf} --without-demo=all ${fnc_local_args}"
 }
 
 fnc_upgrade() {
-    eval "$workspace/odoo-server --config=$workspace/etc/odoo-server.conf --xmlrpc-port=8090 --log-level=info --stop-after-init -u base"
+    eval "${odoo_exec} --config=${odoo_conf} --no-xmlrpc --stop-after-init --without-demo=all -u base -u all"
 }
 
 case "$1" in
@@ -48,16 +65,19 @@ case "$1" in
 
     install)
         fnc_clean
+        fnc_env_activate
         fnc_install
     ;;
 
     local)
         fnc_clean
+        fnc_env_activate
         fnc_local
     ;;
 
     upgrade)
         fnc_clean
+        fnc_env_activate
         fnc_upgrade
     ;;
 
