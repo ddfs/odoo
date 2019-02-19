@@ -7,8 +7,6 @@
 
 fnc_local_args="-u mymodule"
 
-fnc_local_args=""
-
 workspace=`pwd`
 
 python_exec="/usr/bin/python2" # python2|python3
